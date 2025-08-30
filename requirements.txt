@@ -1,3 +1,4 @@
+#autotrading
 python-dotenv
 openai
 pyupbit
@@ -10,3 +11,10 @@ youtube-transcript-api
 streamlit
 plotly
 schedule
+
+
+#server
+fastapi
+uvicorn[standard]
+pydantic>=2
+SQLAlchemy>=2.0
