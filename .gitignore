@@ -1,3 +1,54 @@
 .env
 venv/
 *.db
+
+
+# Node modules
+/node_modules
+/.pnp
+.pnp.js
+
+# Expo / React Native
+.expo
+.expo-shared
+web-build/
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+expo-error.log
+
+# Metro / Cache
+.expo/
+.expo-shared/
+.expo-dev/
+.cache/
+.tmp/
+package-lock.json
+yarn.lock
+
+# Mac / Linux / Windows system files
+.DS_Store
+Thumbs.db
+
+# VSCode settings
+.vscode/
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Android / iOS native build artifacts
+/android
+/ios
+
+# Output of `eas build`
+*.apk
+*.aab
+*.ipa
