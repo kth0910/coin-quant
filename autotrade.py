@@ -37,6 +37,15 @@ def is_ec2():
     except:
         return False
 
+def is_raspberry_pi():
+    """라즈베리파이 환경인지 확인"""
+    try:
+        with open("/proc/device-tree/model", "r") as f:
+            model = f.read().lower()
+        return "raspberry pi" in model
+    except Exception:
+        return False
+
 
 def setup_chrome_options():
     """Chrome 옵션 설정"""
@@ -50,6 +59,9 @@ def setup_chrome_options():
     if is_ec2():
         # EC2 환경 전용 옵션
         chrome_options.add_argument("--headless")
+    elif is_raspberry_pi():
+        chrome_options.add_argument("--headless=new")
+        chrome_options.add_argument("--window-size=1920,1080")
     else:
         # 로컬 환경 전용 옵션
         chrome_options.add_argument("--start-maximized")
@@ -63,12 +75,19 @@ def setup_chrome_options():
 def create_driver():
     """WebDriver 생성"""
     try:
-        env_type = 'EC2' if is_ec2() else '로컬'
+
+        if is_ec2():
+            env_type = 'EC2'
+        elif is_raspberry_pi():
+            env_type = 'Raspberry Pi'
+        else:
+            env_type = '로컬'
+
         print(f"{env_type} 환경에서 ChromeDriver 설정 중...")
        
         chrome_options = setup_chrome_options()
        
-        if is_ec2():
+        if is_ec2() or is_raspberry_pi:
             service = Service('/usr/bin/chromedriver')
         else:
             try:
@@ -1048,9 +1067,8 @@ if __name__ == "__main__":
 
 
         # 스케줄 설정
-        schedule.every().day.at("09:00").do(run_trading)
-        schedule.every().day.at("15:00").do(run_trading)
-        schedule.every().day.at("21:00").do(run_trading)
+        schedule.every().hour.at(":00").do(run_trading)  # 정각
+
 
 
         # 시작 시 즉시 한 번 실행
