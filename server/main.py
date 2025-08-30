@@ -7,6 +7,7 @@ from router import api_router
 from broadcast import ws_writer, enqueue
 from watcher import poll_new_rows_loop
 from db import SessionLocal
+import uvicorn
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
