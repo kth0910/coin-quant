@@ -2,7 +2,7 @@ import asyncio
 from typing import Callable, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
-from .models import TradingHistory, TradingReflection
+from models import TradingHistory, TradingReflection
 
 def poll_new_rows_sync(
     db_factory: Callable[[], Session],

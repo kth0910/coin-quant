@@ -3,10 +3,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, desc
 from typing import List
 
-from server.db import get_db
-from server.models import TradingHistory, TradingReflection
-from server.schemas import TradingHistoryOut, TradingReflectionOut
-from server.broadcast import subscribers
+from db import get_db
+from models import TradingHistory, TradingReflection
+from schemas import TradingHistoryOut, TradingReflectionOut
+from broadcast import subscribers
 
 api_router = APIRouter()
 

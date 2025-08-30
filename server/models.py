@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, Float, String, DateTime, Text, ForeignKey
 from sqlalchemy.orm import relationship
-from server.db import Base
+from db import Base
 
 class TradingHistory(Base):
     __tablename__ = "trading_history"
