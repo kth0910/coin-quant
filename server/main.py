@@ -45,8 +45,8 @@ app.include_router(api_router)
 
 if __name__ == "__main__":
     uvicorn.run(
-        "app.main:app",       # 현재 app 객체 경로
+        app,       # 현재 app 객체 경로
         host="0.0.0.0",
         port=8000,
-        reload=True,          # 개발 시만, 운영에선 False 권장
+        reload=False
     )
