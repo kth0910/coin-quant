@@ -3,10 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import asyncio
 
-from .router import api_router
-from .broadcast import ws_writer, enqueue
-from .watcher import poll_new_rows_loop
-from .db import SessionLocal
+from server.router import api_router
+from server.broadcast import ws_writer, enqueue
+from server.watcher import poll_new_rows_loop
+from server.db import SessionLocal
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
