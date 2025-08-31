@@ -21,7 +21,10 @@
     "react-native-reanimated": "~3.19.1",
     "react-native-svg": "15.11.2",
     "victory": "^37.3.6",
-    "victory-native": "^41.19.3"
+    "victory-native": "^41.19.3",
+    "@shopify/react-native-skia": "2.2.6",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.11.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -29,5 +32,8 @@
     "babel-plugin-inline-dotenv": "^1.7.0",
     "typescript": "~5.8.3"
   },
+  "overrides": {
+   "@shopify/react-native-skia": "2.2.6"
+   },
   "private": true
 }

@@ -1,4 +1,4 @@
-package com.autotradingmobile
+package com.anonymous.autotradingmobile
 
 import android.app.Application
 import android.content.res.Configuration

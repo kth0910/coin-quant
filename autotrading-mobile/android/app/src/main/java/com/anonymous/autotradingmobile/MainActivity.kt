@@ -1,4 +1,4 @@
-package com.autotradingmobile
+package com.anonymous.autotradingmobile
 
 import android.os.Build
 import android.os.Bundle
