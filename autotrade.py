@@ -962,8 +962,10 @@ class EnhancedCryptoTrader:
                 if confidence_score > 70:
                     if decision == "buy":
                         krw = self.upbit.get_balance("KRW")
-                        if krw > 5000:
-                            order_amount = krw * trade_ratio
+                        order_amount = krw * trade_ratio
+                        if order_amount <= 5000:
+                            order_amount = 5001
+                        if order_amount > 5000:
                             order = self.trade_manager.execute_market_buy(order_amount)
                          
                             if order:
@@ -973,6 +975,8 @@ class EnhancedCryptoTrader:
                     elif decision == "sell":
                         btc = self.upbit.get_balance(self.ticker)
                         sell_amount = btc * trade_ratio
+                        if sell_amount <= 5000:
+                            sell_amount = 5001
                         order = self.trade_manager.execute_market_sell(sell_amount)
                        
                         if order:
