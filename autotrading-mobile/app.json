@@ -2,6 +2,7 @@
   "expo": {
     "name": "autotrading-mobile",
     "slug": "autotrading-mobile",
+    "scheme": "autotrading-mobile",
     "experiments": { "typedRoutes": true },
     "version": "1.0.0",
     "orientation": "portrait",

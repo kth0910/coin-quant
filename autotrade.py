@@ -871,7 +871,17 @@ class EnhancedCryptoTrader:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a cryptocurrency trading analyst. Analyze the provided market data and generate a trading decision."
+                        "content": """
+                                    You are a cryptocurrency trading analyst. 
+                                    Analyze the provided market data and generate a trading decision. 
+
+                                    Important rule: 
+                                    Even if the amount is small compared to the Bitcoin price, 
+                                    you should still proceed with the buy decision as long as it is 5000 KRW or more 
+                                    (since trading platform allows minimum market buy orders starting from 5000 KRW). 
+                                    If the decision is 'buy', you must ensure that the purchase amount is at least 5000 KRW. 
+                                    If the calculated buy amount is less than 5000 KRW, change the decision to 'hold'.
+                                    """
                     },
                     {
                         "role": "user",

@@ -17,6 +17,8 @@
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
     "react-native": "0.79.6",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-reanimated": "~3.19.0",
     "react-native-svg": "15.11.2",
     "victory": "^37.3.6",
     "victory-native": "^41.19.3"

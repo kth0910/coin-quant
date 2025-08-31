@@ -1,9 +1,12 @@
 import { View, Text, ScrollView } from "react-native";
 import { useSignals } from "@/hooks/useSignals";
 import Metric from "@/components/Metric";
-import CandleLike from "@/charts/Candle";
+import CandleLike from "@/charts/CandleLike";
+
+
 
 export default function Dashboard() {
+
   const { signals, loading } = useSignals();
   const last = signals[signals.length - 1];
 
