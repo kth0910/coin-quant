@@ -63,8 +63,11 @@ async def ws_writer():
         event, data = await _queue.get()
         try:
             safe = sanitize(event, data)
-            print("[ws_writer] sended data : ", safe)
+            # broadcast.py (ws_writer 내부)
+            print("[ws_writer] dequeued:", event, data)
             await _broadcast(event, safe)
+            
+            print("[ws_writer] sent to", len(subscribers), "subs")
         except Exception as e:
             # 개발 중 원인 확인
             print("[ws_writer] send error:", e, "event=", event, "data=", data)

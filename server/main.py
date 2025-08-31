@@ -13,6 +13,8 @@ import uvicorn
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 백그라운드 태스크 시작
+    print("[lifespan] starting tasks…")
+
     t_poll = asyncio.create_task(
         poll_new_rows_loop(
             db_factory=SessionLocal,
@@ -21,6 +23,8 @@ async def lifespan(app: FastAPI):
         )
     )
     t_writer = asyncio.create_task(ws_writer())  # ← 큐 소비 & 송신
+    print("[lifespan] tasks started")
+
     yield
     # 종료
     for t in (t_poll, t_writer):
