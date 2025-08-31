@@ -9,7 +9,6 @@ export default function Dashboard() {
 
   const { signals, loading } = useSignals();
   const last = signals[signals.length - 1];
-
   return (
     <ScrollView contentContainerStyle={{ paddingTop: 60, paddingHorizontal: 16, gap: 12 }}>
       <Text style={{ fontSize: 22, fontWeight: "700" }}>Dashboard</Text>
@@ -17,7 +16,16 @@ export default function Dashboard() {
         <Metric label="Latest Price" value={last ? `₩${Math.round(last.price).toLocaleString()}` : (loading ? "..." : "-")} />
         <Metric label="Last Signal" value={last ? `${last.type} (${last.confidence})` : (loading ? "..." : "-")} />
       </View>
-      <CandleLike data={signals.slice(-60)} />
+      <CandleLike
+      data={signals.slice(-60).map((s, i) => ({
+        x: i,
+        open: s?.open,
+        high: s?.high,
+        low:  s?.low,
+        close:s?.close,
+      }))}
+    />
+
     </ScrollView>
   );
 }
