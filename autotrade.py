@@ -881,6 +881,7 @@ class EnhancedCryptoTrader:
                                     (since trading platform allows minimum market buy orders starting from 5000 KRW). 
                                     If the decision is 'buy', you must ensure that the purchase amount is at least 5000 KRW. 
                                     If the calculated buy amount is less than 5000 KRW, change the decision to 'hold'.
+                                    If your confidence_score less than 70, set the decision to 'hold'.
                                     """
                     },
                     {
@@ -959,7 +960,7 @@ class EnhancedCryptoTrader:
                 trade_ratio = self.trade_manager.adjust_trade_ratio(percentage, fear_greed_value, decision)
 
 
-                if confidence_score > 70:
+                if confidence_score >= 70:
                     if decision == "buy":
                         krw = self.upbit.get_balance("KRW")
                         order_amount = krw * trade_ratio
