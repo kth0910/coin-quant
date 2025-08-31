@@ -1,8 +1,8 @@
 # server/watcher.py
 import asyncio
 from sqlalchemy.orm import Session
-from models import TradingHistory
-from schemas import TradingHistoryOut
+from models import TradingHistory, TradingReflection
+from schemas import TradingHistoryOut, TradingReflectionOut
 from datetime import datetime
 
 def _to_signal_dto(dto: TradingHistoryOut):
@@ -63,3 +63,35 @@ async def poll_new_rows_loop(db_factory, broadcast, interval_seconds=5, start_fr
         except Exception as e:
             print("[poll] error:", e)
         await asyncio.sleep(interval_seconds)
+
+
+async def poll_new_reflections_loop(db_factory, broadcast, interval_seconds=5, start_from_latest=True, bootstrap_last=50):
+    print("[poll_reflection] start:", interval_seconds)
+
+    def _init_max_id():
+        with db_factory() as db:
+            row = (db.query(TradingReflection.id)
+                     .order_by(TradingReflection.id.desc())
+                     .limit(1)).first()
+            return row[0] if row else 0
+    last_id = await asyncio.to_thread(_init_max_id) if start_from_latest else 0
+    print("[poll_reflection] initialized last_id =", last_id)
+
+    while True:
+        try:
+            def _fetch_since(since_id: int):
+                with db_factory() as db:
+                    return (db.query(TradingReflection)
+                              .filter(TradingReflection.id > since_id)
+                              .order_by(TradingReflection.id.asc())
+                              .all())
+            rows = await asyncio.to_thread(_fetch_since, last_id)
+            for r in rows:
+                last_id = max(last_id, r.id)
+                dto = TradingReflectionOut.model_validate(r)
+                # WS로 단건 push
+                broadcast("reflection", dto.model_dump())
+        except Exception as e:
+            print("[poll_reflection] error:", e)
+        await asyncio.sleep(interval_seconds)
+        

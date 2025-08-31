@@ -50,3 +50,7 @@ class TradingReflectionOut(BaseModel):
     learning_points: str
     class Config:
         from_attributes = True
+
+class ReflectionsResponse(BaseModel):
+    items: List[TradingReflectionOut]
+    next_cursor: Optional[datetime] = None

@@ -7,7 +7,7 @@ import asyncio, uvicorn
 
 from router import api_router
 from broadcast import ws_writer, enqueue
-from watcher import poll_new_rows_loop
+from watcher import poll_new_rows_loop, poll_new_reflections_loop
 from db import SessionLocal
 
 @asynccontextmanager
@@ -17,13 +17,17 @@ async def lifespan(app: FastAPI):
     poll_task = asyncio.create_task(
         poll_new_rows_loop(SessionLocal, enqueue, interval_seconds=3, start_from_latest=True, bootstrap_last=120)
     )
+     # NEW
+    poll_reflection_task = asyncio.create_task(
+        poll_new_reflections_loop(SessionLocal, enqueue, interval_seconds=5, start_from_latest=True, bootstrap_last=120)
+    )
     try:
         yield
     finally:
         print("[lifespan] shutting down…")
-        for t in [poll_task, writer_task]:
+        for t in [poll_task, writer_task, poll_reflection_task]:
             t.cancel()
-        await asyncio.gather(*[writer_task, poll_task], return_exceptions=True)
+        await asyncio.gather(*[writer_task, poll_task, poll_reflection_task], return_exceptions=True)
 
 app = FastAPI(lifespan=lifespan)
 
