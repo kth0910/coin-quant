@@ -976,8 +976,8 @@ class EnhancedCryptoTrader:
                     elif decision == "sell":
                         btc = self.upbit.get_balance(self.ticker)
                         sell_amount = btc * trade_ratio
-                        if sell_amount <= 5000:
-                            sell_amount = 5001
+                        if sell_amount*pyupbit.get_current_price("KRW-BTC") <= 5000:
+                            sell_amount = 5001/pyupbit.get_current_price("KRW-BTC")
                         order = self.trade_manager.execute_market_sell(sell_amount)
                        
                         if order:
