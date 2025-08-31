@@ -6,7 +6,7 @@ from typing import List
 from db import get_db
 from models import TradingHistory, TradingReflection
 from schemas import TradingHistoryOut, TradingReflectionOut
-from broadcast import subscribers, broadcast, sanitize_candle
+from broadcast import subscribers
 
 
 api_router = APIRouter()
@@ -40,15 +40,3 @@ async def ws_updates(ws: WebSocket):
     except WebSocketDisconnect:
         subscribers.discard(ws)
 
-# 예: DB에 새 TradingHistory가 들어온 직후 호출하는 헬퍼
-async def on_new_history(db_row) -> None:
-    # db_row -> dict 변환 (필드명은 상황에 맞게 매핑)
-    raw = {
-        "x": db_row.id,                # 또는 timestamp/sequence
-        "open": db_row.open,
-        "high": db_row.high,
-        "low":  db_row.low,
-        "close":db_row.close,
-    }
-    safe = sanitize_candle(raw)
-    await broadcast("history", safe)
