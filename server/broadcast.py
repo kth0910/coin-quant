@@ -63,6 +63,7 @@ async def ws_writer():
         event, data = await _queue.get()
         try:
             safe = sanitize(event, data)
+            print("[ws_writer] sended data : ", safe)
             await _broadcast(event, safe)
         except Exception as e:
             # 개발 중 원인 확인
