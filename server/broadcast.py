@@ -1,18 +1,26 @@
 # broadcast.py
-from typing import Set, Any, Dict
+from __future__ import annotations
+from typing import Any, Dict, Set, Tuple
 from fastapi import WebSocket
-import json, math
+import asyncio, json, math
 
+# 연결된 구독자
 subscribers: Set[WebSocket] = set()
 
+# 브로드캐스트 작업 큐 (event, data)
+_queue: "asyncio.Queue[Tuple[str, Any]]" = asyncio.Queue()
+
 def _finite_or_none(v: Any):
-    # 숫자면 유한성 체크, 그 외는 그대로(None 등)
     if isinstance(v, (int, float)):
-        return v if math.isfinite(float(v)) else None
+        try:
+            fv = float(v)
+        except Exception:
+            return None
+        return fv if math.isfinite(fv) else None
     return v
 
 def sanitize_candle(data: Dict[str, Any]) -> Dict[str, Any]:
-    # 필요 키만 추출/정규화: x, open, high, low, close
+    # 필요한 키만 추려서 NaN/Inf → None
     return {
         "x": data.get("x"),
         "open": _finite_or_none(data.get("open")),
@@ -21,18 +29,17 @@ def sanitize_candle(data: Dict[str, Any]) -> Dict[str, Any]:
         "close":_finite_or_none(data.get("close")),
     }
 
-async def broadcast(event: str, data: Any):
-    """
-    모든 구독자에게 안전한 JSON으로 전송.
-    NaN/Inf가 남아있으면 직렬화 단계에서 에러를 발생시켜 버그를 조기 발견.
-    """
+def sanitize(event: str, data: Any) -> Any:
+    # 이벤트별 정규화 룰(필요 시 확장)
+    if event == "history" and isinstance(data, dict):
+        return sanitize_candle(data)
+    return data
+
+async def _broadcast(event: str, data: Any):
+    """실제 송신 (allow_nan=False로 비표준 값 차단)"""
     payload = {"event": event, "data": data}
-    try:
-        message = json.dumps(payload, ensure_ascii=False, allow_nan=False)  # 🔒 NaN 차단
-    except ValueError as e:
-        # 개발 중 바로 원인 파악을 위해 예외를 올려도 되고,
-        # 또는 여기서 한번 더 None 치환을 시도할 수도 있음.
-        raise RuntimeError(f"Non-finite number in payload: {e}; payload={payload!r}")
+    # NaN/Inf가 남아 있으면 여기서 바로 에러가 나서 원인 파악 쉬움
+    message = json.dumps(payload, ensure_ascii=False, allow_nan=False)
 
     dead = []
     for ws in list(subscribers):
@@ -45,3 +52,20 @@ async def broadcast(event: str, data: Any):
             await ws.close()
         finally:
             subscribers.discard(ws)
+
+def enqueue(event: str, data: Any):
+    """폴러/서비스 코드에서 호출: 큐에 적재(논블로킹)"""
+    _queue.put_nowait((event, data))
+
+async def ws_writer():
+    """큐의 메시지를 소비해 정규화 후 브로드캐스트"""
+    while True:
+        event, data = await _queue.get()
+        try:
+            safe = sanitize(event, data)
+            await _broadcast(event, safe)
+        except Exception as e:
+            # 개발 중 원인 확인
+            print("[ws_writer] send error:", e, "event=", event, "data=", data)
+        finally:
+            _queue.task_done()
