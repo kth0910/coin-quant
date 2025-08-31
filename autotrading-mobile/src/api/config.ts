@@ -15,3 +15,9 @@ function toWs(base: string) {
   const wsProto = u.protocol === "https:" ? "wss:" : "ws:";
   return `${wsProto}//${u.host}/ws/updates`;
 }
+
+// ✅ 더미 함수: 나중에 확장 가능
+export async function hydrateApiBase() {
+  // 지금은 그냥 no-op
+  return;
+}

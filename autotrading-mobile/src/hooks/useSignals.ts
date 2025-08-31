@@ -1,30 +1,68 @@
 // hooks/useSignals.ts
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { API, hydrateApiBase } from "@/api/config";
-import type { Signal } from "@/types";
+import type { Signal as RawSignal } from "@/types";
 
+// 서버 응답 래퍼 타입
 type HistoryResponse = {
-  items: Signal[];
+  items: RawSignal[];
   next_cursor?: string | null;
 };
 
-// 타입 가드
+// 허용 enum
+const ALLOWED_TYPES = new Set(["BUY", "SELL", "HOLD", "ALERT"] as const);
+type AllowedType = "BUY" | "SELL" | "HOLD" | "ALERT";
+
+// 타입 가드/헬퍼
 function isHistoryResponse(x: any): x is HistoryResponse {
   return x && typeof x === "object" && Array.isArray(x.items);
 }
-function isSignalArray(x: any): x is Signal[] {
-  return Array.isArray(x) && (x.length === 0 || ("id" in x[0] && "ts" in x[0]));
+function isSignalArray(x: any): x is RawSignal[] {
+  return Array.isArray(x) && (x.length === 0 || (x[0] && "ts" in x[0]));
 }
 
-// 정렬 유틸 (ts 오름차순)
-function sortByTsAsc(list: Signal[]) {
+// 정규화: 서버에서 오는 임의 값들을 안전한 Signal로 변환
+function normalizeSignal(s: any): RawSignal {
+  console.log("raw 값 : ", s)
+  const id = Number.isFinite(+s?.id) ? Number(s.id) : -1;
+  const ts = typeof s?.ts === "string" ? s.ts : new Date().toISOString();
+  const ticker = typeof s?.ticker === "string" ? s.ticker : "BTC/KRW";
+  const priceNum = Number(s?.price);
+  const confidenceNum = Number(s?.confidence);
+
+  let typ = String(s?.type ?? "HOLD").toUpperCase();
+  if (!ALLOWED_TYPES.has(typ as AllowedType)) typ = "HOLD";
+
+  return {
+    id,
+    ts,
+    ticker,
+    price: Number.isFinite(priceNum) ? priceNum : 0,
+    type: typ as AllowedType,
+    confidence: Number.isFinite(confidenceNum) ? confidenceNum : 0,
+    reason: typeof s?.reason === "string" ? s.reason : undefined,
+  };
+}
+
+// 정렬/중복 제거
+function sortByTsAsc(list: RawSignal[]) {
   return [...list].sort(
     (a, b) => new Date(a.ts).getTime() - new Date(b.ts).getTime()
   );
 }
+function dedupById(list: RawSignal[]) {
+  const seen = new Set<number>();
+  const out: RawSignal[] = [];
+  for (const s of list) {
+    if (typeof s.id === "number" && seen.has(s.id)) continue;
+    if (typeof s.id === "number") seen.add(s.id);
+    out.push(s);
+  }
+  return out;
+}
 
 export function useSignals() {
-  const [signals, setSignals] = useState<Signal[]>([]);
+  const [signals, setSignals] = useState<RawSignal[]>([]);
   const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
 
@@ -35,7 +73,7 @@ export function useSignals() {
 
   useEffect(() => {
     (async () => {
-      await hydrateApiBase(); // (환경변수/설정 주입용)
+      await hydrateApiBase();
       console.log("[WS TEST] base:", API.base, "ws:", API.ws);
       await fetchInitial();
       connect();
@@ -46,15 +84,16 @@ export function useSignals() {
         const r = await fetch(`${API.base}/history?limit=100`);
         const j = await r.json();
 
+        let arr: RawSignal[] = [];
         if (isSignalArray(j)) {
-          // 서버가 배열을 직접 반환하는 경우(구버전/커스텀)
-          setSignals(sortByTsAsc(j));
+          arr = j.map(normalizeSignal);
         } else if (isHistoryResponse(j)) {
-          // 현재 서버 표준: { items, next_cursor }
-          setSignals(sortByTsAsc(j.items));
+          arr = (j.items ?? []).map(normalizeSignal);
         } else {
           console.warn("Unknown /history shape:", j);
         }
+
+        setSignals(dedupById(sortByTsAsc(arr)));
       } catch (e) {
         console.warn("fetch history error", e);
       } finally {
@@ -87,26 +126,25 @@ export function useSignals() {
         try {
           const msg = JSON.parse(ev.data);
 
-          // 서버가 "bootstrap" 또는 "history" 이벤트로 초기 배열을 보냄
+          // 초기 배열 (bootstrap/history 이벤트)
           if (
             (msg?.event === "bootstrap" || msg?.event === "history") &&
             Array.isArray(msg?.data)
           ) {
-            // 안전하게 정렬
-            setSignals(sortByTsAsc(msg.data));
+            const arr = msg.data.map(normalizeSignal);
+            setSignals((_) => dedupById(sortByTsAsc(arr)));
             setLoading(false);
             return;
           }
 
-          // 신규 단건 시그널
+          // 신규 단건
           if (msg?.event === "signal" && msg?.data) {
-            setSignals((prev) => sortByTsAsc([...prev, msg.data]));
+            const one = normalizeSignal(msg.data);
+            setSignals((prev) => dedupById(sortByTsAsc([...prev, one])));
             return;
           }
 
-          if (msg?.event === "pong") {
-            return;
-          }
+          if (msg?.event === "pong") return;
         } catch (e) {
           console.warn("WS parse error:", e);
         }
