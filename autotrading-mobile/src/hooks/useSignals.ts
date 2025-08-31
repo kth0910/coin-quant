@@ -56,16 +56,32 @@ export function useSignals() {
         ping.current = setInterval(() => wsRef.current?.send("ping"), 15000);
       };
 
+      // hooks/useSignals.ts (핵심 부분만)
       wsRef.current.onmessage = (ev) => {
         try {
           const msg = JSON.parse(ev.data);
-          if (msg?.event === "history" && msg?.data) {
-            setSignals((prev) => [...prev, msg.data].slice(-300));
+
+          if ((msg?.event === "bootstrap" || msg?.event === "history") && Array.isArray(msg?.data)) {
+            // 초기 히스토리/부트스트랩
+            setSignals(msg.data);                 // 서버는 이미 최신순 배열을 보냅니다(시간 오름차순 정렬이면 그대로 사용)
+            setLoading(false);
+            return;
           }
-        } catch {
-          // non-JSON은 무시
+
+          if (msg?.event === "signal" && msg?.data) {
+            setSignals((prev) => [...prev, msg.data]);
+            return;
+          }
+
+          if (msg?.event === "pong") {
+            // keep-alive 응답
+            return;
+          }
+        } catch (e) {
+          console.warn("WS parse error:", e);
         }
       };
+
 
       wsRef.current.onerror = (err) => {
         console.warn("WebSocket error", err);

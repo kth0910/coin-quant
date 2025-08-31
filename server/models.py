@@ -1,3 +1,4 @@
+# server/models.py
 from sqlalchemy import Column, Integer, Float, String, DateTime, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from db import Base
@@ -7,9 +8,9 @@ class TradingHistory(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     timestamp = Column(DateTime, nullable=False)
-    decision = Column(String, nullable=False)          # "buy" | "sell" | "hold"
+    decision = Column(String, nullable=False)            # "buy" | "sell" | "hold" (소문자 저장 가정)
     percentage = Column(Float, nullable=False)
-    reason = Column(Text, nullable=False)
+    reason = Column(Text, nullable=True)
 
     btc_balance = Column(Float, nullable=False)
     krw_balance = Column(Float, nullable=False)
