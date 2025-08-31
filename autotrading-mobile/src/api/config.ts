@@ -1,21 +1,17 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 
-const defaultBase = Constants.expoConfig?.extra?.apiBase ?? "http://localhost:8000";
+const base = (Constants.expoConfig as any)?.extra?.apiBase;
+if (!base) {
+  throw new Error("⚠️ apiBase가 expoConfig.extra.apiBase에 정의되어 있지 않습니다.");
+}
 
-export const API = { base: defaultBase, ws: toWs(defaultBase) };
+export const API = {
+  base,
+  ws: toWs(base),
+};
 
 function toWs(base: string) {
   const u = new URL(base);
-  return (u.protocol === "https:" ? "wss:" : "ws:") + "//" + u.host + "/ws/updates";
-}
-
-export async function hydrateApiBase() {
-  const v = await AsyncStorage.getItem("apiBase");
-  if (v) setApiBase(v);
-}
-
-export function setApiBase(base: string) {
-  API.base = base;
-  API.ws = toWs(base);
+  const wsProto = u.protocol === "https:" ? "wss:" : "ws:";
+  return `${wsProto}//${u.host}/ws/updates`;
 }

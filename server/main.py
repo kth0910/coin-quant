@@ -33,10 +33,13 @@ app = FastAPI(
 )
 
 # 개발 편의용 CORS (운영 시 필요한 도메인만 허용 권장)
+# RN 개발 중 CORS 허용
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], allow_credentials=True,
-    allow_methods=["*"], allow_headers=["*"],
+    allow_origins=["*"],  # 개발 중엔 와일드카드, 배포에서는 도메인 제한
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # 라우터 마운트
