@@ -872,16 +872,15 @@ class EnhancedCryptoTrader:
                     {
                         "role": "system",
                         "content": """
-                                    You are a cryptocurrency trading analyst. 
-                                    Analyze the provided market data and generate a trading decision. 
+                                You are a cryptocurrency trading analyst. 
+                                Analyze the provided market data and generate a trading decision. 
 
-                                    Important rule: 
-                                    Even if the amount is small compared to the Bitcoin price, 
-                                    you should still proceed with the buy decision as long as it is 5000 KRW or more 
-                                    (since trading platform allows minimum market buy orders starting from 5000 KRW). 
-                                    If the decision is 'buy', you must ensure that the purchase amount is at least 5000 KRW. 
-                                    If the calculated buy amount is less than 5000 KRW, change the decision to 'hold'.
-                                    If your confidence_score less than 70, set the decision to 'hold'.
+                                Important rules: 
+                                1. Even if the amount is small compared to the Bitcoin price, you should still proceed with the buy decision as long as it is 5000 KRW or more (since trading platform allows minimum market buy orders starting from 5000 KRW).  
+                                2. If the decision is 'buy' or 'sell', you must ensure that the order amount is at least 5000 KRW.  
+                                3. If the calculated buy or sell amount is less than 5000 KRW, change the decision to 'hold'.  
+                                4. If your confidence_score is less than 70, set the decision to 'hold'.
+
                                     """
                     },
                     {
@@ -976,8 +975,8 @@ class EnhancedCryptoTrader:
                     elif decision == "sell":
                         btc = self.upbit.get_balance(self.ticker)
                         sell_amount = btc * trade_ratio
-                        if sell_amount*pyupbit.get_current_price("KRW-BTC") <= 5000:
-                            sell_amount = 5001/pyupbit.get_current_price("KRW-BTC")
+                        if sell_amount*pyupbit.get_current_price(self.ticker) <= 5000:
+                            sell_amount = 5001/pyupbit.get_current_price(self.ticker)
                         order = self.trade_manager.execute_market_sell(sell_amount)
                        
                         if order:
