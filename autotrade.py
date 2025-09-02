@@ -880,7 +880,7 @@ class EnhancedCryptoTrader:
                                 2. If the decision is 'buy' or 'sell', you must ensure that the order amount is at least 5000 KRW.  
                                 3. If the calculated buy or sell amount is less than 5000 KRW, change the decision to 'hold'.  
                                 4. If your confidence_score is less than 70, set the decision to 'hold'.
-                                5. When buying, the available amount must be limited to 90% or less of the balance.
+                                5. When buying, the available amount must be limited to 99% or less of the balance.
 
                                     """
                     },
